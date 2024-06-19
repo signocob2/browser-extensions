@@ -1,6 +1,6 @@
 # Estensione per Navigazione Browser
 
-Questo è un'estensione per i browser che ti consente di navigare all'interno di una pagina web utilizzando scorciatoie da tastiera e mantenendo traccia dei link cliccati.
+Questa è un'estensione per i browser che ti consente di navigare all'interno di una pagina web utilizzando scorciatoie da tastiera e mantenendo traccia dei link cliccati.
 
 ## Funzionalità
 
