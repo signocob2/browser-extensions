@@ -47,19 +47,26 @@ function createSearchableDropdown() {
     searchInput.type = 'text';
     searchInput.placeholder = 'Cerca batch...';
     searchInput.style.width = '100%';
-    searchInput.style.padding = '5px';
+    searchInput.style.padding = '10px';
     searchInput.style.marginBottom = '5px';
+    searchInput.style.border = '1px solid #ccc';
+    searchInput.style.borderRadius = '4px';
+    searchInput.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.1)';
+    searchInput.style.boxSizing = 'border-box';
 
     // Crea il div per le opzioni
     const optionsDiv = document.createElement('div');
     optionsDiv.style.display = 'none';
     optionsDiv.style.position = 'absolute';
     optionsDiv.style.width = '100%';
-    optionsDiv.style.maxHeight = 'none';
-    optionsDiv.style.overflowY = 'visible';
+    optionsDiv.style.maxHeight = '300px';
+    optionsDiv.style.overflowY = 'auto';
     optionsDiv.style.border = '1px solid #ccc';
     optionsDiv.style.backgroundColor = 'white';
     optionsDiv.style.zIndex = '1000';
+    optionsDiv.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.1)';
+    optionsDiv.style.borderRadius = '4px';
+    optionsDiv.style.boxSizing = 'border-box';
 
     // Funzione per mostrare tutte le opzioni
     function showAllOptions() {
@@ -88,8 +95,16 @@ function createSearchableDropdown() {
     Array.from(selectElement.options).forEach(option => {
         const optionElement = document.createElement('div');
         optionElement.textContent = option.textContent;
-        optionElement.style.padding = '5px';
+        optionElement.style.padding = '10px';
         optionElement.style.cursor = 'pointer';
+        optionElement.style.boxSizing = 'border-box';
+        optionElement.style.borderBottom = '1px solid #f0f0f0';
+        optionElement.addEventListener('mouseover', () => {
+            optionElement.style.backgroundColor = '#f0f0f0';
+        });
+        optionElement.addEventListener('mouseout', () => {
+            optionElement.style.backgroundColor = 'white';
+        });
         optionElement.addEventListener('click', () => {
             searchInput.value = option.textContent;
             selectElement.value = option.value;
