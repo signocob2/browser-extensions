@@ -89,6 +89,10 @@ function createSearchableDropdown() {
     }
 
     Array.from(selectElement.options).forEach(option => {
+        if (option.textContent == '-') {
+            return;
+        }
+
         const optionElement = document.createElement('div');
         optionElement.textContent = option.textContent;
         optionElement.style.padding = '10px';
@@ -118,7 +122,13 @@ function createSearchableDropdown() {
         return new RegExp(str.split('*').map(term => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('.*'), 'i');
     }
 
-    searchInput.addEventListener('input', applyFilter);
+    searchInput.addEventListener('input', () => {
+        // Impedisce l'inserimento di più asterischi consecutivi
+        if (searchInput.value.includes('**')) {
+            searchInput.value = searchInput.value.replace(/\*+/g, '*');
+        }
+        applyFilter();
+    });
 
     searchInput.addEventListener('focus', () => {
         if (searchInput.value.trim() === '') {
