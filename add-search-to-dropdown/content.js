@@ -94,6 +94,10 @@ function createSearchableDropdown() {
             searchInput.value = option.textContent;
             selectElement.value = option.value;
             optionsDiv.style.display = 'none';
+            
+            // Trigger change event on the original select element
+            const event = new Event('change', { bubbles: true });
+            selectElement.dispatchEvent(event);
         });
         optionsDiv.appendChild(optionElement);
     });
@@ -126,7 +130,7 @@ function createSearchableDropdown() {
     wrapper.appendChild(searchInput);
     wrapper.appendChild(optionsDiv);
 
-    // Sostituisci il select originale con il nuovo dropdown
+    // Nascondi il select originale invece di rimuoverlo
     selectElement.style.display = 'none';
     selectElement.parentNode.insertBefore(wrapper, selectElement);
 
