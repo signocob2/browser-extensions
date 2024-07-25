@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Dropdown Search Filter",
+  "version": "1.0",
+  "description": "Aggiunge una funzionalità di ricerca al menu a tendina dei batch",
+  "permissions": ["storage"],
+  "host_permissions": ["http://as-jksbatch01:8080/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://as-jksbatch01:8080/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
