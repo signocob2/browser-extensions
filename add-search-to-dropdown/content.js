@@ -83,11 +83,18 @@ function createSearchableDropdown() {
         optionsDiv.appendChild(optionElement);
     });
 
+    // Funzione per creare una regex da una stringa con wildcard
+    function createRegexFromWildcard(str) {
+        return new RegExp(str.split('*').map(term => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('.*'), 'i');
+    }
+
     // Gestisci l'input di ricerca
     searchInput.addEventListener('input', () => {
-        const filter = searchInput.value.toLowerCase();
+        const filter = searchInput.value;
+        const regex = createRegexFromWildcard(filter);
+        
         Array.from(optionsDiv.children).forEach(optionElement => {
-            if (optionElement.textContent.toLowerCase().includes(filter)) {
+            if (regex.test(optionElement.textContent)) {
                 optionElement.style.display = '';
             } else {
                 optionElement.style.display = 'none';
