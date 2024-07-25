@@ -55,8 +55,8 @@ function createSearchableDropdown() {
     optionsDiv.style.display = 'none';
     optionsDiv.style.position = 'absolute';
     optionsDiv.style.width = '100%';
-    optionsDiv.style.maxHeight = '200px';
-    optionsDiv.style.overflowY = 'auto';
+    optionsDiv.style.maxHeight = 'none';
+    optionsDiv.style.overflowY = 'visible';
     optionsDiv.style.border = '1px solid #ccc';
     optionsDiv.style.backgroundColor = 'white';
     optionsDiv.style.zIndex = '1000';
@@ -65,6 +65,21 @@ function createSearchableDropdown() {
     function showAllOptions() {
         Array.from(optionsDiv.children).forEach(optionElement => {
             optionElement.style.display = '';
+        });
+        optionsDiv.style.display = 'block';
+    }
+
+    // Funzione per applicare il filtro corrente
+    function applyFilter() {
+        const filter = searchInput.value;
+        const regex = createRegexFromWildcard(filter);
+        
+        Array.from(optionsDiv.children).forEach(optionElement => {
+            if (regex.test(optionElement.textContent)) {
+                optionElement.style.display = '';
+            } else {
+                optionElement.style.display = 'none';
+            }
         });
         optionsDiv.style.display = 'block';
     }
@@ -89,22 +104,16 @@ function createSearchableDropdown() {
     }
 
     // Gestisci l'input di ricerca
-    searchInput.addEventListener('input', () => {
-        const filter = searchInput.value;
-        const regex = createRegexFromWildcard(filter);
-        
-        Array.from(optionsDiv.children).forEach(optionElement => {
-            if (regex.test(optionElement.textContent)) {
-                optionElement.style.display = '';
-            } else {
-                optionElement.style.display = 'none';
-            }
-        });
-        optionsDiv.style.display = 'block';
-    });
+    searchInput.addEventListener('input', applyFilter);
 
-    // Mostra tutte le opzioni quando l'input riceve il focus
-    searchInput.addEventListener('focus', showAllOptions);
+    // Gestisci il focus sull'input
+    searchInput.addEventListener('focus', () => {
+        if (searchInput.value.trim() === '') {
+            showAllOptions();
+        } else {
+            applyFilter();
+        }
+    });
 
     // Nascondi le opzioni quando si clicca fuori
     document.addEventListener('click', (e) => {
