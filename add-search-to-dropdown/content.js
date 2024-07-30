@@ -1,55 +1,88 @@
 console.log('content.js >>> Dropdown Search Filter content script avviato');
 
-function createSearchableDropdown() {
-    console.log('content.js >>> Funzione createSearchableDropdown chiamata');
+let optionsDivBranch;
+let selectElementBranch;
+let searchInputBranch;
+
+function createSearchableDropdowns() {
+    console.log('content.js >>> Funzione createSearchableDropdowns chiamata');
     
     const parameterDivs = document.querySelectorAll('div[name="parameter"]');
-    let targetDivBatchId;
-    let targetDivFolder;
+    const targetDivs = {
+        batchId: null,
+        folder: null,
+        branch: null
+    };
     
     for (const div of parameterDivs) {
-        const inputBatchId = div.querySelector('input[value="batchId"]');
-        const inputFolder = div.querySelector('input[value="folder"]');
-        if (inputBatchId) {
-            targetDivBatchId = div;
+        const input = div.querySelector('input[value="batchId"], input[value="folder"], input[value="branch"]');
+        if (input) {
+            targetDivs[input.value] = div;
         }
-        if (inputFolder) {
-            targetDivFolder = div;
-        }
-
-        if (targetDivBatchId && targetDivFolder) {
-            break;
-        }
+        if (targetDivs.batchId && targetDivs.folder && targetDivs.branch) break;
     }
     
-    if (!targetDivBatchId) {
-        console.log('content.js >>> Div target non trovato');
+    if (!targetDivs.batchId || !targetDivs.folder || !targetDivs.branch) {
+        console.log('content.js >>> Uno o più div target non trovati');
         return false;
     }
     
-    console.log('content.js >>> Div target trovato');
+    console.log('content.js >>> Tutti i div target trovati');
     
-    const selectElement = targetDivBatchId.querySelector('select[name="value"]');
+    for (const [key, div] of Object.entries(targetDivs)) {
+        createSearchableDropdown(div, key);
+    }
+    
+    return true;
+}
+
+function createSearchableDropdown(targetDiv, type) {
+    const selectElement = targetDiv.querySelector('select[name="value"]');
     if (!selectElement) {
-        console.log('content.js >>> Select non trovato nel div target');
-        return false;
+        console.log(`content.js >>> Select non trovato nel div target per ${type}`);
+        return;
     }
     
-    console.log('content.js >>> Select trovato nel div target');
-
-    if (targetDivBatchId.querySelector('.custom-dropdown')) {
-        console.log('content.js >>> Dropdown personalizzato già presente');
-        return true;
+    if (targetDiv.querySelector('.custom-dropdown')) {
+        console.log(`content.js >>> Dropdown personalizzato già presente per ${type}`);
+        return;
+    }
+    
+    const wrapper = createDropdownWrapper();
+    const searchInput = createSearchInput(type);
+    const optionsDiv = createOptionsDiv();
+    
+    if (searchInput.id = 'branch') {
+        optionsDivBranch = optionsDiv;
+        selectElementBranch = selectElement;
+        searchInputBranch = searchInput;
     }
 
+    populateOptionsDiv(optionsDiv, selectElement, searchInput);
+    
+    wrapper.appendChild(searchInput);
+    wrapper.appendChild(optionsDiv);
+    selectElement.style.display = 'none';
+    selectElement.parentNode.insertBefore(wrapper, selectElement);
+    
+    setupEventListeners(searchInput, optionsDiv, selectElement, type);
+    
+    console.log(`content.js >>> Dropdown ricercabile creato per ${type}`);
+}
+
+function createDropdownWrapper() {
     const wrapper = document.createElement('div');
     wrapper.className = 'custom-dropdown';
     wrapper.style.position = 'relative';
     wrapper.style.width = '100%';
+    return wrapper;
+}
 
+function createSearchInput(type) {
     const searchInput = document.createElement('input');
+    searchInput.id = type;
     searchInput.type = 'text';
-    searchInput.placeholder = 'Cerca batch...';
+    searchInput.placeholder = `Cerca ${type}...`;
     searchInput.style.width = '100%';
     searchInput.style.padding = '10px';
     searchInput.style.marginBottom = '5px';
@@ -57,7 +90,10 @@ function createSearchableDropdown() {
     searchInput.style.borderRadius = '4px';
     searchInput.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.1)';
     searchInput.style.boxSizing = 'border-box';
+    return searchInput;
+}
 
+function createOptionsDiv() {
     const optionsDiv = document.createElement('div');
     optionsDiv.style.display = 'none';
     optionsDiv.style.position = 'absolute';
@@ -70,36 +106,12 @@ function createSearchableDropdown() {
     optionsDiv.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.1)';
     optionsDiv.style.borderRadius = '4px';
     optionsDiv.style.boxSizing = 'border-box';
+    return optionsDiv;
+}
 
-    let focusedOptionIndex = -1;
-
-    function showAllOptions() {
-        Array.from(optionsDiv.children).forEach(optionElement => {
-            optionElement.style.display = '';
-        });
-        optionsDiv.style.display = 'block';
-        focusedOptionIndex = -1;
-    }
-
-    function applyFilter() {
-        const filter = searchInput.value;
-        const regex = createRegexFromWildcard(filter);
-        
-        Array.from(optionsDiv.children).forEach(optionElement => {
-            if (regex.test(optionElement.textContent)) {
-                optionElement.style.display = '';
-            } else {
-                optionElement.style.display = 'none';
-            }
-        });
-        optionsDiv.style.display = 'block';
-        focusedOptionIndex = -1;
-    }
-
+function populateOptionsDiv(optionsDiv, selectElement, searchInput) {
     Array.from(selectElement.options).forEach(option => {
-        if (option.textContent == '-') {
-            return;
-        }
+        if (option.textContent == '-') return;
 
         const optionElement = document.createElement('div');
         optionElement.textContent = option.textContent;
@@ -107,115 +119,120 @@ function createSearchableDropdown() {
         optionElement.style.cursor = 'pointer';
         optionElement.style.boxSizing = 'border-box';
         optionElement.style.borderBottom = '1px solid #f0f0f0';
-        optionElement.addEventListener('mouseover', () => {
-            optionElement.style.backgroundColor = '#f0f0f0';
-        });
-        optionElement.addEventListener('mouseout', () => {
-            if (focusedOptionIndex !== Array.from(optionsDiv.children).indexOf(optionElement)) {
-                optionElement.style.backgroundColor = 'white';
-            }
-        });
+        
+        optionElement.addEventListener('mouseover', () => optionElement.style.backgroundColor = '#f0f0f0');
+        optionElement.addEventListener('mouseout', () => optionElement.style.backgroundColor = 'white');
+        
         optionElement.addEventListener('click', () => {
             searchInput.value = option.textContent;
             selectElement.value = option.value;
             optionsDiv.style.display = 'none';
-
-            const event = new Event('change', { bubbles: true });
-            selectElement.dispatchEvent(event);
+            selectElement.dispatchEvent(new Event('change', { bubbles: true }));
+            if (searchInput.id = 'batchId') {
+                optionsDivBranch.innerHTML = '';
+                populateOptionsDiv(optionsDivBranch, selectElementBranch, searchInputBranch)
+            }
         });
+        
         optionsDiv.appendChild(optionElement);
     });
+}
 
-    function createRegexFromWildcard(str) {
-        return new RegExp(str.split('*').map(term => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('.*'), 'i');
-    }
+function setupEventListeners(searchInput, optionsDiv, selectElement, type) {
+    let focusedOptionIndex = -1;
 
     searchInput.addEventListener('input', () => {
-        // Impedisce l'inserimento di più asterischi consecutivi
         if (searchInput.value.includes('**')) {
             searchInput.value = searchInput.value.replace(/\*+/g, '*');
         }
-        applyFilter();
+        applyFilter(searchInput, optionsDiv);
     });
 
     searchInput.addEventListener('focus', () => {
         if (searchInput.value.trim() === '') {
-            showAllOptions();
+            showAllOptions(optionsDiv);
         } else {
-            applyFilter();
+            applyFilter(searchInput, optionsDiv);
         }
     });
 
     document.addEventListener('click', (e) => {
-        if (!wrapper.contains(e.target)) {
+        if (!searchInput.parentNode.contains(e.target)) {
             optionsDiv.style.display = 'none';
         }
     });
 
-    searchInput.addEventListener('keydown', (e) => {
-        const options = Array.from(optionsDiv.children).filter(option => option.style.display !== 'none');
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            focusedOptionIndex = (focusedOptionIndex + 1) % options.length;
-            setFocusedOption();
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            focusedOptionIndex = (focusedOptionIndex - 1 + options.length) % options.length;
-            setFocusedOption();
-        } else if ((e.key === 'Enter' || e.key === 'Tab') && focusedOptionIndex >= 0) {
-            e.preventDefault();
-            e.stopPropagation();
-            options[focusedOptionIndex].click();
-            
-            requestAnimationFrame(() => {
-                // Troviamo l'elemento select del folder
-                const folderSelect = targetDivFolder.querySelector('select[name="value"]');
-                if (folderSelect) {
-                    folderSelect.focus();
-                    // Opzionalmente, possiamo anche aprire il dropdown del select
-                    const event = new MouseEvent('mousedown');
-                    folderSelect.dispatchEvent(event);
-                } else {
-                    console.log('Select del folder non trovato');
-                }
-            });
-        }
-    });
+    searchInput.addEventListener('keydown', (e) => handleKeyDown(e, optionsDiv, searchInput, selectElement, type));
+}
 
-    function setFocusedOption() {
-        const options = Array.from(optionsDiv.children).filter(option => option.style.display !== 'none');
-        options.forEach((option, index) => {
-            if (index === focusedOptionIndex) {
-                option.style.backgroundColor = '#e9e9e9';
-                option.scrollIntoView({ block: 'nearest' });
+function showAllOptions(optionsDiv) {
+    Array.from(optionsDiv.children).forEach(optionElement => {
+        optionElement.style.display = '';
+    });
+    optionsDiv.style.display = 'block';
+}
+
+function applyFilter(searchInput, optionsDiv) {
+    const filter = searchInput.value;
+    const regex = createRegexFromWildcard(filter);
+    
+    Array.from(optionsDiv.children).forEach(optionElement => {
+        optionElement.style.display = regex.test(optionElement.textContent) ? '' : 'none';
+    });
+    optionsDiv.style.display = 'block';
+}
+
+function createRegexFromWildcard(str) {
+    return new RegExp(str.split('*').map(term => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('.*'), 'i');
+}
+
+function handleKeyDown(e, optionsDiv, searchInput, selectElement, type) {
+    const options = Array.from(optionsDiv.children).filter(option => option.style.display !== 'none');
+    let focusedOptionIndex = -1;
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        focusedOptionIndex = (focusedOptionIndex + 1) % options.length;
+        setFocusedOption(options, focusedOptionIndex);
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        focusedOptionIndex = (focusedOptionIndex - 1 + options.length) % options.length;
+        setFocusedOption(options, focusedOptionIndex);
+    } else if ((e.key === 'Enter' || e.key === 'Tab') && focusedOptionIndex >= 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        options[focusedOptionIndex].click();
+        
+        requestAnimationFrame(() => {
+            const nextType = getNextType(type);
+            const nextSelect = document.querySelector(`div[name="parameter"] input[value="${nextType}"] + select[name="value"]`);
+            if (nextSelect) {
+                nextSelect.focus();
+                nextSelect.dispatchEvent(new MouseEvent('mousedown'));
             } else {
-                option.style.backgroundColor = 'white';
+                console.log(`Select successivo non trovato per ${type}`);
             }
         });
     }
+}
 
-    // Aggiungiamo questa funzione per assicurarci che l'input del folder sia focusabile
-    function makeFolderInputFocusable() {
-        const folderInput = targetDivFolder.querySelector('input[name="value"]');
-        if (folderInput) {
-            folderInput.tabIndex = 0;
+function getNextType(currentType) {
+    const types = ['batchId', 'folder', 'branch'];
+    const currentIndex = types.indexOf(currentType);
+    return types[(currentIndex + 1) % types.length];
+}
+
+function setFocusedOption(options, focusedOptionIndex) {
+    options.forEach((option, index) => {
+        option.style.backgroundColor = index === focusedOptionIndex ? '#e9e9e9' : 'white';
+        if (index === focusedOptionIndex) {
+            option.scrollIntoView({ block: 'nearest' });
         }
-    }
-
-    // Chiamiamo questa funzione dopo aver creato il dropdown
-    makeFolderInputFocusable();
-
-    wrapper.appendChild(searchInput);
-    wrapper.appendChild(optionsDiv);
-    selectElement.style.display = 'none';
-    selectElement.parentNode.insertBefore(wrapper, selectElement);
-
-    console.log('content.js >>> Dropdown ricercabile creato');
-    return true;
+    });
 }
 
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', createSearchableDropdown);
+    document.addEventListener('DOMContentLoaded', createSearchableDropdowns);
 } else {
-    createSearchableDropdown();
+    createSearchableDropdowns();
 }
