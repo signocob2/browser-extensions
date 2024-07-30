@@ -4,24 +4,32 @@ function createSearchableDropdown() {
     console.log('content.js >>> Funzione createSearchableDropdown chiamata');
     
     const parameterDivs = document.querySelectorAll('div[name="parameter"]');
-    let targetDiv;
+    let targetDivBatchId;
+    let targetDivFolder;
     
     for (const div of parameterDivs) {
-        const input = div.querySelector('input[value="batchId"]');
-        if (input) {
-            targetDiv = div;
+        const inputBatchId = div.querySelector('input[value="batchId"]');
+        const inputFolder = div.querySelector('input[value="folder"]');
+        if (inputBatchId) {
+            targetDivBatchId = div;
+        }
+        if (inputFolder) {
+            targetDivFolder = div;
+        }
+
+        if (targetDivBatchId && targetDivFolder) {
             break;
         }
     }
     
-    if (!targetDiv) {
+    if (!targetDivBatchId) {
         console.log('content.js >>> Div target non trovato');
         return false;
     }
     
     console.log('content.js >>> Div target trovato');
     
-    const selectElement = targetDiv.querySelector('select[name="value"]');
+    const selectElement = targetDivBatchId.querySelector('select[name="value"]');
     if (!selectElement) {
         console.log('content.js >>> Select non trovato nel div target');
         return false;
@@ -29,7 +37,7 @@ function createSearchableDropdown() {
     
     console.log('content.js >>> Select trovato nel div target');
 
-    if (targetDiv.querySelector('.custom-dropdown')) {
+    if (targetDivBatchId.querySelector('.custom-dropdown')) {
         console.log('content.js >>> Dropdown personalizzato già presente');
         return true;
     }
@@ -154,10 +162,23 @@ function createSearchableDropdown() {
             e.preventDefault();
             focusedOptionIndex = (focusedOptionIndex - 1 + options.length) % options.length;
             setFocusedOption();
-        } else if (e.key === 'Enter' && focusedOptionIndex >= 0) {
+        } else if ((e.key === 'Enter' || e.key === 'Tab') && focusedOptionIndex >= 0) {
             e.preventDefault();
             e.stopPropagation();
             options[focusedOptionIndex].click();
+            
+            requestAnimationFrame(() => {
+                // Troviamo l'elemento select del folder
+                const folderSelect = targetDivFolder.querySelector('select[name="value"]');
+                if (folderSelect) {
+                    folderSelect.focus();
+                    // Opzionalmente, possiamo anche aprire il dropdown del select
+                    const event = new MouseEvent('mousedown');
+                    folderSelect.dispatchEvent(event);
+                } else {
+                    console.log('Select del folder non trovato');
+                }
+            });
         }
     });
 
@@ -172,6 +193,17 @@ function createSearchableDropdown() {
             }
         });
     }
+
+    // Aggiungiamo questa funzione per assicurarci che l'input del folder sia focusabile
+    function makeFolderInputFocusable() {
+        const folderInput = targetDivFolder.querySelector('input[name="value"]');
+        if (folderInput) {
+            folderInput.tabIndex = 0;
+        }
+    }
+
+    // Chiamiamo questa funzione dopo aver creato il dropdown
+    makeFolderInputFocusable();
 
     wrapper.appendChild(searchInput);
     wrapper.appendChild(optionsDiv);
