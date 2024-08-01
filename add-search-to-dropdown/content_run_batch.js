@@ -1,3 +1,5 @@
+console.log("content_run_batch.js");
+
 let optionsDivBatchId;
 let selectElementBatchId;
 let searchInputBatchId;
@@ -6,91 +8,58 @@ let optionsDivFolder;
 let selectElementFolder;
 let searchInputFolder;
 
-let optionsDivBranch;
-let selectElementBranch;
-let searchInputBranch;
-
-let optionsBranch;
-
-let inputVersion;
+let inputScript;
+let inputArguments;
 let selectServer;
 
 const focusedOptionIndexex = {
     batchId: -1,
-    folder: -1,
-    branch: -1
+    folder: -1
 }
-
-let selectElementWithIdBranch;
-
-function aggiornaBranches() {    
-    // Ripulisci completamente optionsDivBranch prima di ripopolare
-    optionsDivBranch.innerHTML = '';
-    populateOptionsDiv(optionsDivBranch, selectElementBranch, searchInputBranch);
-}
-
-// Configurazione dell'observer
-const config = { childList: true, subtree: true };
-
-// Callback da eseguire quando vengono rilevate mutazioni
-const callback = function(mutationsList, observer) {
-    let shouldUpdate = false;
-    for(let mutation of mutationsList) {
-        if (mutation.type === 'childList') {
-            shouldUpdate = true;
-            break;
-        }
-    }
-    if (shouldUpdate) {
-        // Usa setTimeout per assicurarsi che tutte le mutazioni siano state processate
-        setTimeout(() => {
-            aggiornaBranches();
-        }, 0);
-    }
-};
-
-// Crea un'istanza di MutationObserver con la callback
-const observer = new MutationObserver(callback);
 
 function createSearchableDropdowns() {
-    // RECUPERA L'ELEMENTO inputVersion
+    // RECUPERA L'ELEMENTO inputScript
     document.querySelectorAll('div[name="parameter"]').forEach(div => {
-        // Verifica se il <div> contiene un <input> con value="version"
-        if (div.querySelector('input[name="name"][value="version"]')) {
+        // Verifica se il <div> contiene un <input> con value="script"
+        if (div.querySelector('input[name="name"][value="script"]')) {
           // Trova e stampa l'input di tipo text all'interno di questo <div>
-          inputVersion = div.querySelector('input[name="value"][type="text"]');
+          inputScript = div.querySelector('input[name="value"][type="text"]');
+        }
+    });
+
+    // RECUPERA L'ELEMENTO inputArguments
+    document.querySelectorAll('div[name="parameter"]').forEach(div => {
+        // Verifica se il <div> contiene un <input> con value="arguments"
+        if (div.querySelector('input[name="name"][value="arguments"]')) {
+          // Trova e stampa l'input di tipo text all'interno di questo <div>
+          inputArguments = div.querySelector('input[name="value"][type="text"]');
         }
     });
 
     // RECUPERA L'ELEMENTO selectServer
     document.querySelectorAll('div[name="parameter"]').forEach(div => {
-        // Verifica se il <div> contiene un <input> con value="version"
+        // Verifica se il <div> contiene un <input> con value="server"
         if (div.querySelector('input[name="name"][value="server"]')) {
           // Trova e stampa l'input di tipo text all'interno di questo <div>
           selectServer = div.querySelector('select[name="value"]');
         }
     });
 
-    selectElementWithIdBranch = document.getElementById('branch').querySelector('select');
-    // Inizia ad osservare il nodo target per le mutazioni configurate
-    observer.observe(selectElementWithIdBranch, config);
-
     const parameterDivs = document.querySelectorAll('div[name="parameter"]');
     const targetDivs = {
         batchId: null,
-        folder: null,
-        branch: null
+        folder: null
     };
     
     for (const div of parameterDivs) {
-        const input = div.querySelector('input[value="batchId"], input[value="folder"], input[value="branch"]');
+        const input = div.querySelector('input[value="batchId"], input[value="folder"]');
         if (input) {
             targetDivs[input.value] = div;
         }
-        if (targetDivs.batchId && targetDivs.folder && targetDivs.branch) break;
+        if (targetDivs.batchId && targetDivs.folder) break;
     }
     
-    if (!targetDivs.batchId || !targetDivs.folder || !targetDivs.branch) {
+    if (!targetDivs.batchId || !targetDivs.folder) {
         console.log('content.js >>> Uno o più div target non trovati');
         return false;
     }
@@ -126,10 +95,6 @@ function createSearchableDropdown(targetDiv, type) {
         optionsDivFolder = optionsDiv;
         selectElementFolder = selectElement;
         searchInputFolder = searchInput;
-    } else if (searchInput.id == 'branch') {
-        optionsDivBranch = optionsDiv;
-        selectElementBranch = selectElement;
-        searchInputBranch = searchInput;
     }
 
     populateOptionsDiv(optionsDiv, selectElement, searchInput);
@@ -206,17 +171,17 @@ function populateOptionsDiv(optionsDiv, selectElement, searchInput) {
             optionsDiv.style.display = 'none';
             selectElement.dispatchEvent(new Event('change', { bubbles: true }));
             if (searchInput.id == 'batchId') {
-                searchInputBranch.value = '';
                 if (searchInput.value.includes("scrambling")) {
                     selectServer.value = "as-springtest05";
                 } else {
                     selectServer.value = "as-springtest02";
                 }
             }
-            if (searchInput.id == 'branch') {
-                if (inputVersion.value == '' || inputVersion.value == '-') {
-                    inputVersion.value = selectElementBranch.value.replace(/\//g, '-');
-                }
+            if (searchInput.id == 'batchId') {
+                inputScript.value = selectElementBatchId.value.replace(/^batch-/, "") + "_ .sh";
+            }
+            if (searchInput.id == 'folder') {
+                inputArguments.value = searchInput.value;
             }
         });
         
@@ -296,16 +261,12 @@ function handleKeyDown(e, optionsDiv, searchInput, selectElement, type) {
             const nextType = e.shiftKey ? getPreviousType(type) : getNextType(type);
             let nextSelect = document.querySelector(`input[id="${nextType}"]`);
             if (!nextSelect) {
-                nextSelect = e.shiftKey ? selectServer : inputVersion;
+                nextSelect = e.shiftKey ? selectServer : inputScript;
             }
             if (nextSelect) {
                 if (focusedOptionIndexex[searchInput.id] < 0) {
-                    console.log('optionsDivBatchId = ', optionsDivBatchId);
-                    console.log('optionsDivFolder = ', optionsDivFolder);
-                    console.log('optionsDivBranch = ', optionsDivBranch);
                     optionsDivBatchId.style.display = 'none';
                     optionsDivFolder.style.display = 'none';
-                    optionsDivBranch.style.display = 'none';
                 }
 
                 nextSelect.focus();
@@ -317,18 +278,17 @@ function handleKeyDown(e, optionsDiv, searchInput, selectElement, type) {
     } else if (e.key === 'Escape') {
         optionsDivBatchId.style.display = 'none';
         optionsDivFolder.style.display = 'none';
-        optionsDivBranch.style.display = 'none';
     }
 }
 
 function getNextType(currentType) {
-    const types = ['batchId', 'folder', 'branch', 'version'];
+    const types = ['batchId', 'folder', 'script'];
     const currentIndex = types.indexOf(currentType);
     return types[(currentIndex + 1) % types.length];
 }
 
 function getPreviousType(currentType) {
-    const types = ['batchId', 'folder', 'branch', 'version'];
+    const types = ['batchId', 'folder', 'script'];
     const currentIndex = types.indexOf(currentType);
     return types[(currentIndex - 1 + types.length) % types.length];
 }

@@ -4,14 +4,18 @@
   "version": "1.0",
   "description": "Aggiunge una funzionalità di ricerca al menu a tendina dei batch",
   "permissions": ["storage"],
-  "host_permissions": ["http://as-jksbatch01:8080/*"],
+  "host_permissions": ["http://as-jksbatch01:8080/job/bva/job/run-batch/build*", "http://as-jksbatch01:8080/job/bva/job/deploy-batch/build*"],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["http://as-jksbatch01:8080/*"],
-      "js": ["content.js"]
+      "matches": ["http://as-jksbatch01:8080/job/bva/job/run-batch/build*"],
+      "js": ["content_run_batch.js"]
+    },
+    {
+      "matches": ["http://as-jksbatch01:8080/job/bva/job/deploy-batch/build*"],
+      "js": ["content_deploy_batch.js"]
     }
   ],
   "icons": {
