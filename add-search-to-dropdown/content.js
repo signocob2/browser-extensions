@@ -1,5 +1,3 @@
-console.log('content.js >>> Dropdown Search Filter content script avviato');
-
 let optionsDivBranch;
 let selectElementBranch;
 let searchInputBranch;
@@ -14,13 +12,7 @@ const focusedOptionIndexex = {
 
 let selectElementWithIdBranch;
 
-// Funzione per loggare le opzioni
-function logOptions() {
-    console.log('Le opzioni attuali sono:');
-    Array.from(selectElementWithIdBranch.options).forEach(option => {
-        console.log(`${option.value}: ${option.text}`);
-    });
-    
+function aggiornaBranches() {    
     // Ripulisci completamente optionsDivBranch prima di ripopolare
     optionsDivBranch.innerHTML = '';
     populateOptionsDiv(optionsDivBranch, selectElementBranch, searchInputBranch);
@@ -31,7 +23,6 @@ const config = { childList: true, subtree: true };
 
 // Callback da eseguire quando vengono rilevate mutazioni
 const callback = function(mutationsList, observer) {
-    console.log('callback triggered');
     let shouldUpdate = false;
     for(let mutation of mutationsList) {
         if (mutation.type === 'childList') {
@@ -40,10 +31,9 @@ const callback = function(mutationsList, observer) {
         }
     }
     if (shouldUpdate) {
-        console.log('Le opzioni del select sono cambiate');
         // Usa setTimeout per assicurarsi che tutte le mutazioni siano state processate
         setTimeout(() => {
-            logOptions();
+            aggiornaBranches();
         }, 0);
     }
 };
@@ -51,9 +41,7 @@ const callback = function(mutationsList, observer) {
 // Crea un'istanza di MutationObserver con la callback
 const observer = new MutationObserver(callback);
 
-function createSearchableDropdowns() {
-    console.log('content.js >>> Funzione createSearchableDropdowns chiamata');
-    
+function createSearchableDropdowns() {    
     selectElementWithIdBranch = document.getElementById('branch').querySelector('select');
     // Inizia ad osservare il nodo target per le mutazioni configurate
     observer.observe(selectElementWithIdBranch, config);
@@ -77,8 +65,6 @@ function createSearchableDropdowns() {
         console.log('content.js >>> Uno o più div target non trovati');
         return false;
     }
-    
-    console.log('content.js >>> Tutti i div target trovati');
     
     for (const [key, div] of Object.entries(targetDivs)) {
         createSearchableDropdown(div, key);
@@ -257,9 +243,16 @@ function handleKeyDown(e, optionsDiv, searchInput, selectElement, type) {
         
         requestAnimationFrame(() => {
             const nextType = getNextType(type);
-            console.log("nextType: ", nextType);
-            const nextSelect = document.querySelector(`input[id="${nextType}"]`);
-            console.log("nextSelect: ", nextSelect);
+            let nextSelect = document.querySelector(`input[id="${nextType}"]`);
+            if (!nextSelect) {
+                document.querySelectorAll('div[name="parameter"]').forEach(div => {
+                    // Verifica se il <div> contiene un <input> con value="version"
+                    if (div.querySelector('input[name="name"][value="version"]')) {
+                      // Trova e stampa l'input di tipo text all'interno di questo <div>
+                      nextSelect = div.querySelector('input[name="value"][type="text"]');
+                    }
+                });
+            }
             if (nextSelect) {
                 nextSelect.focus();
                 nextSelect.dispatchEvent(new MouseEvent('mousedown'));
@@ -273,7 +266,7 @@ function handleKeyDown(e, optionsDiv, searchInput, selectElement, type) {
 }
 
 function getNextType(currentType) {
-    const types = ['batchId', 'folder', 'branch'];
+    const types = ['batchId', 'folder', 'branch', 'version'];
     const currentIndex = types.indexOf(currentType);
     return types[(currentIndex + 1) % types.length];
 }
