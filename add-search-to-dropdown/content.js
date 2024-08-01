@@ -4,6 +4,12 @@ let optionsDivBranch;
 let selectElementBranch;
 let searchInputBranch;
 
+const focusedOptionIndexex = {
+    batchId: -1,
+    folder: -1,
+    branch: -1
+}
+
 function createSearchableDropdowns() {
     console.log('content.js >>> Funzione createSearchableDropdowns chiamata');
     
@@ -37,6 +43,7 @@ function createSearchableDropdowns() {
 }
 
 function createSearchableDropdown(targetDiv, type) {
+    console.log('createSearchableDropdown partitooooooooooooooooooooo');
     const selectElement = targetDiv.querySelector('select[name="value"]');
     if (!selectElement) {
         console.log(`content.js >>> Select non trovato nel div target per ${type}`);
@@ -52,7 +59,7 @@ function createSearchableDropdown(targetDiv, type) {
     const searchInput = createSearchInput(type);
     const optionsDiv = createOptionsDiv();
     
-    if (searchInput.id = 'branch') {
+    if (searchInput.id == 'branch') {
         optionsDivBranch = optionsDiv;
         selectElementBranch = selectElement;
         searchInputBranch = searchInput;
@@ -128,10 +135,12 @@ function populateOptionsDiv(optionsDiv, selectElement, searchInput) {
             selectElement.value = option.value;
             optionsDiv.style.display = 'none';
             selectElement.dispatchEvent(new Event('change', { bubbles: true }));
-            if (searchInput.id = 'batchId') {
-                optionsDivBranch.innerHTML = '';
-                populateOptionsDiv(optionsDivBranch, selectElementBranch, searchInputBranch)
-            }
+            setTimeout(() => {
+                if (searchInput.id == 'batchId') {
+                    optionsDivBranch.innerHTML = '';
+                    populateOptionsDiv(optionsDivBranch, selectElementBranch, searchInputBranch)
+                }
+            }, 2000);
         });
         
         optionsDiv.appendChild(optionElement);
@@ -139,8 +148,6 @@ function populateOptionsDiv(optionsDiv, selectElement, searchInput) {
 }
 
 function setupEventListeners(searchInput, optionsDiv, selectElement, type) {
-    let focusedOptionIndex = -1;
-
     searchInput.addEventListener('input', () => {
         if (searchInput.value.includes('**')) {
             searchInput.value = searchInput.value.replace(/\*+/g, '*');
@@ -149,6 +156,8 @@ function setupEventListeners(searchInput, optionsDiv, selectElement, type) {
     });
 
     searchInput.addEventListener('focus', () => {
+        focusedOptionIndexex[searchInput.id] = -1;
+        setFocusedOption(Array.from(optionsDiv.children).filter(optionElement => optionElement.style.display !== 'none'), focusedOptionIndexex[searchInput.id]);
         if (searchInput.value.trim() === '') {
             showAllOptions(optionsDiv);
         } else {
@@ -188,24 +197,28 @@ function createRegexFromWildcard(str) {
 
 function handleKeyDown(e, optionsDiv, searchInput, selectElement, type) {
     const options = Array.from(optionsDiv.children).filter(option => option.style.display !== 'none');
-    let focusedOptionIndex = -1;
 
     if (e.key === 'ArrowDown') {
         e.preventDefault();
-        focusedOptionIndex = (focusedOptionIndex + 1) % options.length;
-        setFocusedOption(options, focusedOptionIndex);
+        focusedOptionIndexex[searchInput.id] = ((focusedOptionIndexex[searchInput.id] + 1) % options.length);
+        setFocusedOption(options, focusedOptionIndexex[searchInput.id]);
     } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        focusedOptionIndex = (focusedOptionIndex - 1 + options.length) % options.length;
-        setFocusedOption(options, focusedOptionIndex);
-    } else if ((e.key === 'Enter' || e.key === 'Tab') && focusedOptionIndex >= 0) {
+        focusedOptionIndexex[searchInput.id] = ((focusedOptionIndexex[searchInput.id] - 1) % options.length);
+        if (focusedOptionIndexex[searchInput.id] < 0) {
+            focusedOptionIndexex[searchInput.id] = options.length - 1;
+        }
+        setFocusedOption(options, focusedOptionIndexex[searchInput.id]);
+    } else if ((e.key === 'Enter' || e.key === 'Tab') && focusedOptionIndexex[searchInput.id] >= 0) {
         e.preventDefault();
         e.stopPropagation();
-        options[focusedOptionIndex].click();
+        options[focusedOptionIndexex[searchInput.id]].click();
         
         requestAnimationFrame(() => {
             const nextType = getNextType(type);
-            const nextSelect = document.querySelector(`div[name="parameter"] input[value="${nextType}"] + select[name="value"]`);
+            console.log("nextType: ", nextType);
+            const nextSelect = document.querySelector(`input[id="${nextType}"]`);
+            console.log("nextSelect: ", nextSelect);
             if (nextSelect) {
                 nextSelect.focus();
                 nextSelect.dispatchEvent(new MouseEvent('mousedown'));
@@ -214,6 +227,8 @@ function handleKeyDown(e, optionsDiv, searchInput, selectElement, type) {
             }
         });
     }
+
+    
 }
 
 function getNextType(currentType) {
