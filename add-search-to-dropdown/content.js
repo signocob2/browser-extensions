@@ -4,6 +4,9 @@ let searchInputBranch;
 
 let optionsBranch;
 
+let inputVersion;
+let selectServer;
+
 const focusedOptionIndexex = {
     batchId: -1,
     folder: -1,
@@ -41,7 +44,25 @@ const callback = function(mutationsList, observer) {
 // Crea un'istanza di MutationObserver con la callback
 const observer = new MutationObserver(callback);
 
-function createSearchableDropdowns() {    
+function createSearchableDropdowns() {
+    // RECUPERA L'ELEMENTO inputVersion
+    document.querySelectorAll('div[name="parameter"]').forEach(div => {
+        // Verifica se il <div> contiene un <input> con value="version"
+        if (div.querySelector('input[name="name"][value="version"]')) {
+          // Trova e stampa l'input di tipo text all'interno di questo <div>
+          inputVersion = div.querySelector('input[name="value"][type="text"]');
+        }
+    });
+
+    // RECUPERA L'ELEMENTO selectServer
+    document.querySelectorAll('div[name="parameter"]').forEach(div => {
+        // Verifica se il <div> contiene un <input> con value="version"
+        if (div.querySelector('input[name="name"][value="server"]')) {
+          // Trova e stampa l'input di tipo text all'interno di questo <div>
+          selectServer = div.querySelector('select[name="value"]');
+        }
+    });
+
     selectElementWithIdBranch = document.getElementById('branch').querySelector('select');
     // Inizia ad osservare il nodo target per le mutazioni configurate
     observer.observe(selectElementWithIdBranch, config);
@@ -168,6 +189,19 @@ function populateOptionsDiv(optionsDiv, selectElement, searchInput) {
             selectElement.value = option.value;
             optionsDiv.style.display = 'none';
             selectElement.dispatchEvent(new Event('change', { bubbles: true }));
+            if (searchInput.id == 'batchId') {
+                searchInputBranch.value = '';
+                if (searchInput.value.includes("scrambling")) {
+                    selectServer.value = "as-springtest05";
+                } else {
+                    selectServer.value = "as-springtest02";
+                }
+            }
+            if (searchInput.id == 'branch') {
+                if (inputVersion.value == '' || inputVersion.value == '-') {
+                    inputVersion.value = selectElementBranch.value.replace(/\//g, '-');
+                }
+            }
         });
         
         optionsDiv.appendChild(optionElement);
@@ -179,17 +213,16 @@ function setupEventListeners(searchInput, optionsDiv, selectElement, type) {
         if (searchInput.value.includes('**')) {
             searchInput.value = searchInput.value.replace(/\*+/g, '*');
         }
+        if (searchInput.value.includes(' ')) {
+            searchInput.value = searchInput.value.replace(/ /g, '');
+        }
         applyFilter(searchInput, optionsDiv);
     });
 
     searchInput.addEventListener('focus', () => {
         focusedOptionIndexex[searchInput.id] = -1;
         setFocusedOption(Array.from(optionsDiv.children).filter(optionElement => optionElement.style.display !== 'none'), focusedOptionIndexex[searchInput.id]);
-        if (searchInput.value.trim() === '') {
-            showAllOptions(optionsDiv);
-        } else {
-            applyFilter(searchInput, optionsDiv);
-        }
+        showAllOptions(optionsDiv);
     });
 
     document.addEventListener('click', (e) => {
@@ -245,13 +278,7 @@ function handleKeyDown(e, optionsDiv, searchInput, selectElement, type) {
             const nextType = getNextType(type);
             let nextSelect = document.querySelector(`input[id="${nextType}"]`);
             if (!nextSelect) {
-                document.querySelectorAll('div[name="parameter"]').forEach(div => {
-                    // Verifica se il <div> contiene un <input> con value="version"
-                    if (div.querySelector('input[name="name"][value="version"]')) {
-                      // Trova e stampa l'input di tipo text all'interno di questo <div>
-                      nextSelect = div.querySelector('input[name="value"][type="text"]');
-                    }
-                });
+                nextSelect = inputVersion;
             }
             if (nextSelect) {
                 nextSelect.focus();
