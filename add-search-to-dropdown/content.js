@@ -4,15 +4,60 @@ let optionsDivBranch;
 let selectElementBranch;
 let searchInputBranch;
 
+let optionsBranch;
+
 const focusedOptionIndexex = {
     batchId: -1,
     folder: -1,
     branch: -1
 }
 
+let selectElementWithIdBranch;
+
+// Funzione per loggare le opzioni
+function logOptions() {
+    console.log('Le opzioni attuali sono:');
+    Array.from(selectElementWithIdBranch.options).forEach(option => {
+        console.log(`${option.value}: ${option.text}`);
+    });
+    
+    // Ripulisci completamente optionsDivBranch prima di ripopolare
+    optionsDivBranch.innerHTML = '';
+    populateOptionsDiv(optionsDivBranch, selectElementBranch, searchInputBranch);
+}
+
+// Configurazione dell'observer
+const config = { childList: true, subtree: true };
+
+// Callback da eseguire quando vengono rilevate mutazioni
+const callback = function(mutationsList, observer) {
+    console.log('callback triggered');
+    let shouldUpdate = false;
+    for(let mutation of mutationsList) {
+        if (mutation.type === 'childList') {
+            shouldUpdate = true;
+            break;
+        }
+    }
+    if (shouldUpdate) {
+        console.log('Le opzioni del select sono cambiate');
+        // Usa setTimeout per assicurarsi che tutte le mutazioni siano state processate
+        setTimeout(() => {
+            logOptions();
+        }, 0);
+    }
+};
+
+// Crea un'istanza di MutationObserver con la callback
+const observer = new MutationObserver(callback);
+
 function createSearchableDropdowns() {
     console.log('content.js >>> Funzione createSearchableDropdowns chiamata');
     
+    selectElementWithIdBranch = document.getElementById('branch').querySelector('select');
+    // Inizia ad osservare il nodo target per le mutazioni configurate
+    observer.observe(selectElementWithIdBranch, config);
+
     const parameterDivs = document.querySelectorAll('div[name="parameter"]');
     const targetDivs = {
         batchId: null,
@@ -43,7 +88,6 @@ function createSearchableDropdowns() {
 }
 
 function createSearchableDropdown(targetDiv, type) {
-    console.log('createSearchableDropdown partitooooooooooooooooooooo');
     const selectElement = targetDiv.querySelector('select[name="value"]');
     if (!selectElement) {
         console.log(`content.js >>> Select non trovato nel div target per ${type}`);
@@ -117,6 +161,9 @@ function createOptionsDiv() {
 }
 
 function populateOptionsDiv(optionsDiv, selectElement, searchInput) {
+    // Ripulisci il div delle opzioni prima di popolarlo
+    optionsDiv.innerHTML = '';
+    
     Array.from(selectElement.options).forEach(option => {
         if (option.textContent == '-') return;
 
@@ -135,12 +182,6 @@ function populateOptionsDiv(optionsDiv, selectElement, searchInput) {
             selectElement.value = option.value;
             optionsDiv.style.display = 'none';
             selectElement.dispatchEvent(new Event('change', { bubbles: true }));
-            setTimeout(() => {
-                if (searchInput.id == 'batchId') {
-                    optionsDivBranch.innerHTML = '';
-                    populateOptionsDiv(optionsDivBranch, selectElementBranch, searchInputBranch)
-                }
-            }, 2000);
         });
         
         optionsDiv.appendChild(optionElement);
