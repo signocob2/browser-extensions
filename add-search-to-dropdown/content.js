@@ -122,7 +122,7 @@ function createSearchableDropdown(targetDiv, type) {
         optionsDivBatchId = optionsDiv;
         selectElementBatchId = selectElement;
         searchInputBatchId = searchInput;
-    } else if (searchInput.id == 'version') {
+    } else if (searchInput.id == 'folder') {
         optionsDivFolder = optionsDiv;
         selectElementFolder = selectElement;
         searchInputFolder = searchInput;
@@ -242,7 +242,6 @@ function setupEventListeners(searchInput, optionsDiv, selectElement, type) {
     });
 
     document.addEventListener('click', (e) => {
-        console.log("document.addEventListener('click' intercettato");
         if (!searchInput.parentNode.contains(e.target)) {
             optionsDiv.style.display = 'none';
         }
@@ -286,33 +285,50 @@ function handleKeyDown(e, optionsDiv, searchInput, selectElement, type) {
             focusedOptionIndexex[searchInput.id] = options.length - 1;
         }
         setFocusedOption(options, focusedOptionIndexex[searchInput.id]);
-    } else if ((e.key === 'Enter' || e.key === 'Tab') && focusedOptionIndexex[searchInput.id] >= 0) {
+    } else if ((e.key === 'Enter' || e.key === 'Tab') 
+        // && focusedOptionIndexex[searchInput.id] >= 0
+    ) {
         e.preventDefault();
         e.stopPropagation();
-        options[focusedOptionIndexex[searchInput.id]].click();
+        if (focusedOptionIndexex[searchInput.id] >= 0) {
+            options[focusedOptionIndexex[searchInput.id]].click();
+        }
         
         requestAnimationFrame(() => {
-            const nextType = getNextType(type);
+            const nextType = e.shiftKey ? getPreviousType(type) : getNextType(type);
             let nextSelect = document.querySelector(`input[id="${nextType}"]`);
             if (!nextSelect) {
-                nextSelect = inputVersion;
+                nextSelect = e.shiftKey ? selectServer : inputVersion;
             }
             if (nextSelect) {
+                if (focusedOptionIndexex[searchInput.id] < 0) {
+                    console.log('optionsDivBatchId = ', optionsDivBatchId);
+                    console.log('optionsDivFolder = ', optionsDivFolder);
+                    console.log('optionsDivBranch = ', optionsDivBranch);
+                    optionsDivBatchId.style.display = 'none';
+                    optionsDivFolder.style.display = 'none';
+                    optionsDivBranch.style.display = 'none';
+                }
+
                 nextSelect.focus();
                 nextSelect.dispatchEvent(new MouseEvent('mousedown'));
             } else {
-                console.log(`Select successivo non trovato per ${type}`);
+                console.log(`Select ${e.shiftKey ? 'precedente' : 'successivo'} non trovato per ${type}`);
             }
         });
     }
-
-    
 }
 
 function getNextType(currentType) {
     const types = ['batchId', 'folder', 'branch', 'version'];
     const currentIndex = types.indexOf(currentType);
     return types[(currentIndex + 1) % types.length];
+}
+
+function getPreviousType(currentType) {
+    const types = ['batchId', 'folder', 'branch', 'version'];
+    const currentIndex = types.indexOf(currentType);
+    return types[(currentIndex - 1 + types.length) % types.length];
 }
 
 function setFocusedOption(options, focusedOptionIndex) {
