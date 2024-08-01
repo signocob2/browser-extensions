@@ -285,9 +285,7 @@ function handleKeyDown(e, optionsDiv, searchInput, selectElement, type) {
             focusedOptionIndexex[searchInput.id] = options.length - 1;
         }
         setFocusedOption(options, focusedOptionIndexex[searchInput.id]);
-    } else if ((e.key === 'Enter' || e.key === 'Tab') 
-        // && focusedOptionIndexex[searchInput.id] >= 0
-    ) {
+    } else if (e.key === 'Enter' || e.key === 'Tab') {
         e.preventDefault();
         e.stopPropagation();
         if (focusedOptionIndexex[searchInput.id] >= 0) {
@@ -316,6 +314,10 @@ function handleKeyDown(e, optionsDiv, searchInput, selectElement, type) {
                 console.log(`Select ${e.shiftKey ? 'precedente' : 'successivo'} non trovato per ${type}`);
             }
         });
+    } else if (e.key === 'Escape') {
+        optionsDivBatchId.style.display = 'none';
+        optionsDivFolder.style.display = 'none';
+        optionsDivBranch.style.display = 'none';
     }
 }
 
