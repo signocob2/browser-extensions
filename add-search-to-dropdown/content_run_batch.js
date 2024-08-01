@@ -191,8 +191,8 @@ function populateOptionsDiv(optionsDiv, selectElement, searchInput) {
 
 function setupEventListeners(searchInput, optionsDiv, selectElement, type) {
     searchInput.addEventListener('input', () => {
-        if (searchInput.value.includes('**')) {
-            searchInput.value = searchInput.value.replace(/\*+/g, '*');
+        if (searchInput.value.includes('*')) {
+            searchInput.value = searchInput.value.replace(/\*/g, '');
         }
         if (searchInput.value.includes(' ')) {
             searchInput.value = searchInput.value.replace(/ /g, '');
@@ -225,7 +225,7 @@ function showAllOptions(optionsDiv) {
 function applyFilter(searchInput, optionsDiv) {
     const filter = searchInput.value;
     const regex = createRegexFromWildcard(filter);
-    
+
     Array.from(optionsDiv.children).forEach(optionElement => {
         optionElement.style.display = regex.test(optionElement.textContent) ? '' : 'none';
     });
@@ -233,7 +233,9 @@ function applyFilter(searchInput, optionsDiv) {
 }
 
 function createRegexFromWildcard(str) {
-    return new RegExp(str.split('*').map(term => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('.*'), 'i');
+    // Aggiunge automaticamente un '*' tra ogni carattere della stringa e anche all'inizio e alla fine
+    const modifiedStr = str.split('').join('*');
+    return new RegExp(modifiedStr.split('*').map(term => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('.*'), 'i');
 }
 
 function handleKeyDown(e, optionsDiv, searchInput, selectElement, type) {
