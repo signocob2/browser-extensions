@@ -1,0 +1,1 @@
+console.log("background.js >>> Background script avviato (Questo log è visualizzabile solamente accedendo a 'service worker' dalle estensioni, non è possibile visualizzarlo dal classico F12)");
