@@ -1,3 +1,11 @@
+let optionsDivBatchId;
+let selectElementBatchId;
+let searchInputBatchId;
+
+let optionsDivFolder;
+let selectElementFolder;
+let searchInputFolder;
+
 let optionsDivBranch;
 let selectElementBranch;
 let searchInputBranch;
@@ -110,7 +118,15 @@ function createSearchableDropdown(targetDiv, type) {
     const searchInput = createSearchInput(type);
     const optionsDiv = createOptionsDiv();
     
-    if (searchInput.id == 'branch') {
+    if (searchInput.id == 'batchId') {
+        optionsDivBatchId = optionsDiv;
+        selectElementBatchId = selectElement;
+        searchInputBatchId = searchInput;
+    } else if (searchInput.id == 'version') {
+        optionsDivFolder = optionsDiv;
+        selectElementFolder = selectElement;
+        searchInputFolder = searchInput;
+    } else if (searchInput.id == 'branch') {
         optionsDivBranch = optionsDiv;
         selectElementBranch = selectElement;
         searchInputBranch = searchInput;
@@ -226,6 +242,7 @@ function setupEventListeners(searchInput, optionsDiv, selectElement, type) {
     });
 
     document.addEventListener('click', (e) => {
+        console.log("document.addEventListener('click' intercettato");
         if (!searchInput.parentNode.contains(e.target)) {
             optionsDiv.style.display = 'none';
         }
