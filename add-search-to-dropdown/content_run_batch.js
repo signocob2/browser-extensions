@@ -178,7 +178,7 @@ function populateOptionsDiv(optionsDiv, selectElement, searchInput) {
                 }
             }
             if (searchInput.id == 'batchId') {
-                inputScript.value = selectElementBatchId.value.replace(/^batch-/, "") + "_ .sh";
+                inputScript.value = selectElementBatchId.value.replace(/^batch-/, "") + "_";
             }
             if (searchInput.id == 'folder') {
                 inputArguments.value = searchInput.value;
@@ -191,8 +191,8 @@ function populateOptionsDiv(optionsDiv, selectElement, searchInput) {
 
 function setupEventListeners(searchInput, optionsDiv, selectElement, type) {
     searchInput.addEventListener('input', () => {
-        if (searchInput.value.includes('*')) {
-            searchInput.value = searchInput.value.replace(/\*/g, '');
+        if (searchInput.value.includes('**')) {
+            searchInput.value = searchInput.value.replace(/\*+/g, '*');
         }
         if (searchInput.value.includes(' ')) {
             searchInput.value = searchInput.value.replace(/ /g, '');
@@ -233,9 +233,7 @@ function applyFilter(searchInput, optionsDiv) {
 }
 
 function createRegexFromWildcard(str) {
-    // Aggiunge automaticamente un '*' tra ogni carattere della stringa e anche all'inizio e alla fine
-    const modifiedStr = str.split('').join('*');
-    return new RegExp(modifiedStr.split('*').map(term => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('.*'), 'i');
+    return new RegExp(str.split('*').map(term => term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('.*'), 'i');
 }
 
 function handleKeyDown(e, optionsDiv, searchInput, selectElement, type) {
